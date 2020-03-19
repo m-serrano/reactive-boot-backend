@@ -30,4 +30,18 @@ public class RxJava2PostRepository {
         DATA.add(saved);
         return Single.just(saved);
     }
+
+    Observable<Post> saveAll(List<Post> posts) {
+        List<Post> list = new ArrayList<>();
+        posts.stream().forEach(
+                (post)-> {
+                    long id = DATA.size() + 1;
+                    Post saved = Post.builder().id(id).title(post.getTitle()).content(post.getContent()).build();
+                    list.add(saved);
+                    DATA.add(saved);
+                }
+        );
+        return Observable.fromIterable(list);
+    }
+
 }
