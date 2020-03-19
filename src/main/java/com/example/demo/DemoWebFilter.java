@@ -2,6 +2,7 @@ package com.example.demo;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
@@ -19,14 +20,25 @@ import java.nio.charset.Charset;
 import java.time.OffsetDateTime;
 
 @Component
-public class DemoWebFilter implements WebFilter {
+public class DemoWebFilter implements WebFilter , Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange serverWebExchange,
                              WebFilterChain webFilterChain) {
 
         serverWebExchange.getResponse()
                 .getHeaders().add("web-filter", "web-filter-test");
-        return webFilterChain.filter(new PartnerServerWebExchangeDecorator(serverWebExchange));
+        //https://developpaper.com/question/how-to-modify-the-request-parameters-of-multipart-form-data-format-in-spring-cloud-gateway/
+
+        ServerHttpRequestDecorator decorator = new CachingServerHttpRequestDecorator(serverWebExchange.getRequest());
+
+        return webFilterChain.filter(
+                serverWebExchange.mutate().request(decorator).build()
+        );
+    }
+
+    @Override
+    public int getOrder() {
+        return 1;
     }
 
 
@@ -68,12 +80,13 @@ public class DemoWebFilter implements WebFilter {
         public Flux<DataBuffer> getBody() {
             return super.getBody().doOnNext(this::cache)
                     .doOnComplete(
-                            ()-> System.out.println(getCachedBody())
+                            ()-> System.out.println("onComplete: " + getCachedBody())
                     );
         }
 
         @SneakyThrows
         private void cache(DataBuffer buffer) {
+            System.out.println("cache: " + buffer);
             cachedBody.append(UTF_8.decode(buffer.asByteBuffer())
                     .toString());
         }
