@@ -25,12 +25,12 @@ public class RxJava2PostController {
         return this.posts.findById(id);
     }
 
-    @PostMapping(value = "save")
+    @PostMapping(value = "/save")
     public Single<Post> create(@RequestBody Post post) {
         return this.posts.save(post);
     }
 
-    @PostMapping(value = "saveAll")
+    @PostMapping(value = "/saveAll")
     public Observable<Post> create(@RequestBody List<Post> posts) {
         return this.posts.saveAll(posts);
     }

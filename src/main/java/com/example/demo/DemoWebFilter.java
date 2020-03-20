@@ -71,22 +71,24 @@ public class DemoWebFilter implements WebFilter , Ordered {
         private final OffsetDateTime timestamp = OffsetDateTime.now();
         private final StringBuilder cachedBody = new StringBuilder();
         private Charset UTF_8 = Charset.forName("UTF-8");
+        private long contentLength;
 
         CachingServerHttpRequestDecorator(ServerHttpRequest delegate) {
             super(delegate);
+            this.contentLength = delegate.getHeaders().getContentLength();
         }
 
         @Override
         public Flux<DataBuffer> getBody() {
             return super.getBody().doOnNext(this::cache)
                     .doOnComplete(
-                            ()-> System.out.println("onComplete: " + getCachedBody())
+                            ()-> System.out.println("onComplete: cacheBody=" + getCachedBody() + " getCachedBodyLength = " + getCachedBody().length() + " this.contentLength=" + this.contentLength)
                     );
         }
 
         @SneakyThrows
         private void cache(DataBuffer buffer) {
-            System.out.println("cache: " + buffer);
+            System.out.println("cache: bufferSize=" + buffer.capacity() + " this.contentLength=" + this.contentLength);
             cachedBody.append(UTF_8.decode(buffer.asByteBuffer())
                     .toString());
         }
