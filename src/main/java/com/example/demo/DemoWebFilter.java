@@ -1,9 +1,15 @@
 package com.example.demo;
 
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -82,7 +88,13 @@ public class DemoWebFilter implements WebFilter , Ordered {
         public Flux<DataBuffer> getBody() {
             return super.getBody().doOnNext(this::cache)
                     .doOnComplete(
-                            ()-> System.out.println("onComplete: cacheBody=" + getCachedBody() + " getCachedBodyLength = " + getCachedBody().length() + " this.contentLength=" + this.contentLength)
+                            ()-> {
+                                //ByteBufAllocator byteBufAllocator = new PooledByteBufAllocator();
+                                //NettyDataBufferFactory bufferFactory = new NettyDataBufferFactory(byteBufAllocator);
+                                //DataBuffer dataBuffer = bufferFactory.wrap(getCachedBody().getBytes());
+                                System.out.println("onComplete: cacheBody=" + getCachedBody() + " getCachedBodyLength = " + getCachedBody().length() + " this.contentLength=" + this.contentLength);
+                                //return Flux.just(dataBuffer);
+                            }
                     );
         }
 
@@ -95,6 +107,7 @@ public class DemoWebFilter implements WebFilter , Ordered {
 
         public String getCachedBody() {
             return cachedBody.toString();
+            //return "[{\"id\"=\"1\"}]";
         }
     }
 
