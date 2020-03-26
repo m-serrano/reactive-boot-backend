@@ -2,6 +2,8 @@ package com.example.demo;
 
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.reactivex.Flowable;
+import io.reactivex.Observable;
 import lombok.Builder;
 import org.assertj.core.api.Assertions;
 import org.junit.runner.RunWith;
@@ -17,7 +19,8 @@ import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.Arrays;
+import java.util.function.*;
 import java.util.Optional;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -48,7 +51,7 @@ public class Test {
 
     @org.junit.Test
     public void test3() throws InterruptedException{
-        String[] a = new String[]{"foo","bar"};
+
         Flux f = Flux.error(new IllegalStateException()).subscribeOn(Schedulers.immediate());
         StepVerifier.create(f)
                 .expectError(IllegalStateException.class).verify();
@@ -85,6 +88,22 @@ public class Test {
                 .doOnNext((u)-> System.out.println("onNext2: " + u.name));
         StepVerifier.create(mono).expectNextMatches((a)-> a.name.equals("MARCO")).expectComplete().verify();
     }
+
+    @org.junit.Test
+    public void test7() {
+        Flux<String> f = Flux.fromArray(
+                 //new String[]{ "foo","bar", (new String[] {"X"})[1] }
+                new String[]{ "foo","bar"}
+        ).onErrorResume(
+                 (err)-> Flux.fromArray( new String[] {"foo2","bar2"})
+         ).doOnNext((u)-> System.out.println("onNext: " + u));
+         f.subscribe();
+
+        Flowable flowable = Flowable.fromPublisher(f);
+        Flux fluxConverted = Flux.from(flowable);
+        Observable observable = Observable.fromPublisher(fluxConverted);
+    }
+
 
     @Builder
     private static class User {
